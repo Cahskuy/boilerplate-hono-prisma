@@ -61,7 +61,7 @@ authRoute.post('/logout', async (c) => {
     if (!rt) return c.text('No refresh token', 400);
 
     // verifikasi RT & ambil jti via TokenService (bukan import jose manual)
-    const tokens = new TokenService();
+    const tokens = c.var.container.resolve(TokenService);
     const payload = await tokens.verifyRefreshToken(rt);
     const jti = payload.jti as string;
 

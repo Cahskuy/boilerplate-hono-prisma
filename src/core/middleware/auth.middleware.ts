@@ -1,7 +1,5 @@
+import { TokenService } from '@/modules/auth/services/token.service';
 import type { Context, Next } from 'hono';
-import { TokenService } from '../../modules/auth/services/token.service';
-
-const tokens = new TokenService();
 
 export async function authMiddleware(c: Context, next: Next) {
     const header = c.req.header('Authorization') ?? '';
@@ -9,6 +7,7 @@ export async function authMiddleware(c: Context, next: Next) {
     if (!token) return c.text('Unauthorized', 401);
 
     try {
+        const tokens = c.var.container.resolve(TokenService);
         const claims = await tokens.verifyAccessToken(token);
         // simpan ke ctx var
         c.set('user', {
