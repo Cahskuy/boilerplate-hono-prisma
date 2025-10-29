@@ -1,8 +1,8 @@
+import { inject, injectable } from 'tsyringe';
+import { TOKENS } from '@/core/di/tokens.di';
 import type { IUserRepository } from './user.repository';
 import type { CreateUserDto } from '../dto/create-user.dto';
 import type { PrismaClient } from '@prisma/client';
-import { inject, injectable } from 'tsyringe';
-import { TOKENS } from '@/core/di/tokens';
 
 @injectable()
 export class UserPrismaRepository implements IUserRepository {

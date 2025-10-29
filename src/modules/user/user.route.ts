@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { CreateUserSchema } from './dto/create-user.dto';
 import { CreateUserCommand } from './commands/create-user.command';
-import { zodMiddleware } from '@/core/middleware/zod';
+import { zodMiddleware } from '@/core/middleware/zod.middleware';
 
 export const userRoute = () => {
     const r = new Hono();

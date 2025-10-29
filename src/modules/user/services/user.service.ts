@@ -1,5 +1,6 @@
 import { inject, injectable } from 'tsyringe';
-import { TOKENS } from '@/core/di/tokens';
+import { TOKENS } from '@/core/di/tokens.di';
+import { Password } from '@/core/utils/crypto.util';
 import type { IUserRepository } from '../repositories/user.repository';
 import type { CreateUserDto } from '../dto/create-user.dto';
 
@@ -13,6 +14,10 @@ export class UserService {
                 status: 409,
                 expose: true,
             });
-        return this.repo.create(input);
+
+        const hashed = await Password.hash(input.password);
+        const data = { ...input, password: hashed };
+
+        return this.repo.create(data);
     }
 }

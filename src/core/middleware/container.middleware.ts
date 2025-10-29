@@ -1,5 +1,5 @@
 import type { Context, Next } from 'hono';
-import { buildContainer } from '@/core/di/container';
+import { buildContainer } from '@/core/di/container.di';
 
 const root = buildContainer();
 
