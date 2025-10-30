@@ -6,11 +6,12 @@ import { RefreshSessionCommand } from './commands/refresh-session.command';
 import { LogoutCommand } from './commands/logout.command';
 import { TokenService } from './services/token.service';
 import { security } from '../../config/security.config';
+import { zodMiddleware } from '@/core/middleware/zod.middleware';
 
 export const authRoute = new Hono();
 
 // login
-authRoute.post('/login', async (c) => {
+authRoute.post('/login', zodMiddleware({ body: LoginSchema }), async (c) => {
     const body = await c.req.json();
     const dto = LoginSchema.parse(body);
     const cmd = c.var.container.resolve(LoginCommand);

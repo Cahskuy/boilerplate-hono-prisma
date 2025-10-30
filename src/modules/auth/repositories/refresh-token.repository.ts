@@ -28,28 +28,19 @@ export class RefreshTokenRepository {
         });
     }
 
-    async verifyAndGet(jti: string, token: string) {
-        const rt = await this.prisma.refreshToken.findUnique({
+    async findByJti(jti: string) {
+        return this.prisma.refreshToken.findUnique({
             where: { jti },
         });
-        if (!rt || rt.revokedAt || rt.expiresAt < new Date()) return null;
-        const ok = await verify(rt.hashed, token);
-        return ok ? rt : null;
+    }
+
+    async verifyHash(hashed: string, raw: string) {
+        return verify(hashed, raw);
     }
 
     async revokeByJti(jti: string) {
-        const token = await this.prisma.refreshToken.findUnique({
-            where: { jti },
-        });
-        if (!token) {
-            throw Object.assign(new Error('Invalid refresh token'), {
-                status: 401,
-                expose: true,
-            });
-        }
-
-        await this.prisma.refreshToken.update({
-            where: { jti },
+        await this.prisma.refreshToken.updateMany({
+            where: { jti, revokedAt: null },
             data: { revokedAt: new Date() },
         });
     }

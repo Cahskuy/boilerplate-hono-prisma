@@ -41,20 +41,47 @@ export class AuthService {
     }
 
     async rotate(oldRefresh: string) {
-        // verify JWT
+        // verifikasi JWT-nya dulu
         const payload = await this.tokens.verifyRefreshToken(oldRefresh);
         const { jti, sub } = payload;
-        // check DB match + not revoked
-        const ok = await this.rtRepo.verifyAndGet(jti!, oldRefresh);
-        if (!ok)
+
+        // ambil RT dari DB
+        const rt = await this.rtRepo.findByJti(jti!);
+
+        // nggak ada atau expired → invalid
+        if (!rt || rt.expiresAt < new Date()) {
             throw Object.assign(new Error('Invalid refresh token'), {
                 status: 401,
                 expose: true,
             });
+        }
 
+        // kalau sudah direvoke → ini reuse detection
+        if (rt.revokedAt) {
+            await this.rtRepo.revokeAllForUser(rt.userId);
+
+            throw Object.assign(new Error('Refresh token reused'), {
+                status: 401,
+                expose: true,
+            });
+        }
+
+        // cek hash cocok gak
+        const match = await this.rtRepo.verifyHash(rt.hashed, oldRefresh);
+        if (!match) {
+            // bisa jadi token palsu / dicopy
+            await this.rtRepo.revokeAllForUser(rt.userId);
+
+            throw Object.assign(new Error('Invalid refresh token'), {
+                status: 401,
+                expose: true,
+            });
+        }
+
+        // pastikan usernya masih ada
         const user = await this.userRepo.findById(sub as string);
         if (!user) {
-            // sekalian revoke RT biar ga dipakai
+            // revoke token ini aja
             await this.rtRepo.revokeByJti(jti!);
             throw Object.assign(new Error('User not found'), {
                 status: 401,
@@ -62,16 +89,13 @@ export class AuthService {
             });
         }
 
-        const role = user.role;
-
-        // revoke old
+        // revoke RT lama (karena udah dipakai)
         await this.rtRepo.revokeByJti(jti!);
 
-        // issue new pair
-        const accessRefresh = await this.issue({
-            id: sub as string,
-            role: role,
+        // issue pasangan baru
+        return this.issue({
+            id: user.id,
+            role: user.role,
         });
-        return accessRefresh;
     }
 }

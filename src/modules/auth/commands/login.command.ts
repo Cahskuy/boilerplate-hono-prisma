@@ -16,6 +16,7 @@ export class LoginCommand {
         if (!user)
             throw Object.assign(new Error('Invalid credentials'), {
                 status: 401,
+                expose: true,
             });
         return this.auth.issue({ id: user.id, role: user.role }, meta);
     }
