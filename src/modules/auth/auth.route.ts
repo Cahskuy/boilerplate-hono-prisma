@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { getCookie, deleteCookie } from 'hono/cookie';
-import { LoginDto } from './dto/login.dto';
+import { LoginSchema } from './dto/login.dto';
 import { LoginCommand } from './commands/login.command';
 import { RefreshSessionCommand } from './commands/refresh-session.command';
 import { LogoutCommand } from './commands/logout.command';
@@ -12,21 +12,15 @@ export const authRoute = new Hono();
 // login
 authRoute.post('/login', async (c) => {
     const body = await c.req.json();
-    const parsed = LoginDto.safeParse(body);
-    if (!parsed.success) return c.json({ message: 'Invalid input' }, 400);
-
+    const dto = LoginSchema.parse(body);
     const cmd = c.var.container.resolve(LoginCommand);
-    const { access, refresh } = await cmd.execute(
-        parsed.data.email,
-        parsed.data.password,
-        {
-            ua: c.req.header('user-agent') ?? '',
-            ip:
-                c.req.header('x-forwarded-for') ||
-                c.req.header('x-real-ip') ||
-                'unknown',
-        }
-    );
+    const { access, refresh } = await cmd.execute(dto, {
+        ua: c.req.header('user-agent') ?? '',
+        ip:
+            c.req.header('x-forwarded-for') ||
+            c.req.header('x-real-ip') ||
+            'unknown',
+    });
 
     // set HttpOnly cookie untuk refresh
     c.header(

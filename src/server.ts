@@ -21,7 +21,7 @@ app.onError(errorMiddleware());
 //   return c.json({ user });
 // });
 
-// // contoh proteksi + scope
+// contoh proteksi + scope
 // app.get('/admin/dashboard', authMiddleware, requireScope('admin:read'), (c) => {
 //   return c.text('secret');
 // });

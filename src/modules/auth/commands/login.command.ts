@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { TOKENS } from '@/core/di/tokens.di';
 import { PasswordStrategy } from '../strategies/password.strategy';
 import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
 
 @injectable()
 export class LoginCommand {
@@ -10,12 +11,8 @@ export class LoginCommand {
         @inject(TOKENS.AuthService) private auth: AuthService
     ) {}
 
-    async execute(
-        email: string,
-        password: string,
-        meta?: { ua?: string; ip?: string }
-    ) {
-        const user = await this.strategy.validate(email, password);
+    async execute(dto: LoginDto, meta?: { ua?: string; ip?: string }) {
+        const user = await this.strategy.validate(dto.email, dto.password);
         if (!user)
             throw Object.assign(new Error('Invalid credentials'), {
                 status: 401,

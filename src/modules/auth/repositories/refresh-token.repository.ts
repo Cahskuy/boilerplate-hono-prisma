@@ -38,6 +38,16 @@ export class RefreshTokenRepository {
     }
 
     async revokeByJti(jti: string) {
+        const token = await this.prisma.refreshToken.findUnique({
+            where: { jti },
+        });
+        if (!token) {
+            throw Object.assign(new Error('Invalid refresh token'), {
+                status: 401,
+                expose: true,
+            });
+        }
+
         await this.prisma.refreshToken.update({
             where: { jti },
             data: { revokedAt: new Date() },
